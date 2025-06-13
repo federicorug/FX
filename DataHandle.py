@@ -16,7 +16,7 @@ class Fx_data:
         self.maturity = ['1W', '2W', '3W','1M', '2M', '3M', '6M', '9M', '12M', '2Y', '3Y', '4Y', '5Y', '7Y', '10Y']
         cal1 = TARGET()
         cal2 = UnitedStates(UnitedStates.NYSE)
-        #self.calendar =  JointCalendar(cal1, cal2, JointCalendar.JoinHolidays)
+        self.calendar =  JointCalendar(cal1, cal2)
         self.today = dt.date.today()
     
     def spot_data(self):
