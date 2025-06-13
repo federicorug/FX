@@ -26,7 +26,7 @@ class rate:
         elif coin == 'USD':
             ticker = 'USOSFR'
 
-        rate_tick = ['{}{} Index'.format(ticker,i) for i in ['1Z','2Z','A','B','C', 'D', 'E','F','G','J','K','1','2','3','4','5','7','10','20']]
+        rate_tick = ['{}{} Index'.format(ticker,i) for i in self.tick]
         rate_curve = [blp.bdp(i, flds=['Security_Name', 'PX_LAST','maturity']) for i in rate_tick]
         self.rate_curve = pd.concat(rate_curve, axis=0)
         self.rate_mat = [ ((i - self.today).days)/360 for i in self.rate_curve['maturity'].values]
