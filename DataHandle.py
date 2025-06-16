@@ -11,17 +11,17 @@ from RateHandle import rate as r
 class Fx_data:
     def __init__(self):
 
-        self.ticker = 'EURUSD BGN Curncy'
+        self.ticker_fx = 'EURUSD BGN Curncy'
         self.fields = ['Security_Name','mid']
         self.maturity = ['1W', '2W', '3W','1M', '2M', '3M', '6M', '9M', '12M', '2Y', '3Y', '4Y', '5Y', '7Y', '10Y']
         cal1 = TARGET()
         cal2 = UnitedStates(UnitedStates.NYSE)
-        self.calendar =  JointCalendar(cal1, cal2)
+        self.fx_calendar =  JointCalendar(cal1, cal2)
         self.today = dt.date.today()
     
     def spot_data(self):
 
-        self.spot = blp.bdp(self.ticker, flds = self.fields)['mid'].values[0]
+        self.spot = blp.bdp(self.ticker_fx, flds = self.fields)['mid'].values[0]
 
     def fwd_data(self):
 
@@ -97,11 +97,13 @@ class Fx_data:
             sigma = sigma * 0.01   
 
             if option_type == 'call':
-                d1 = np.array([norm.ppf(delta * np.exp(sofr(i)/100 * i)) if i < 1 else norm.ppf(delta) for i in T])
+                #d1 = np.array([norm.ppf(delta * np.exp(sofr(i)/100 * i)) if i < 1 else norm.ppf(delta) for i in T])
+                d1 = np.array([norm.ppf(delta * np.exp(sofr(i) * i)) if i < 1 else norm.ppf(delta) for i in T])
 
             else:
                 delta = delta + 1
-                d1 = np.array([norm.ppf(delta * np.exp(sofr(i)/100 * i)) if i < 1 else norm.ppf(delta) for i in T])
+                #d1 = np.array([norm.ppf(delta * np.exp(sofr(i)/100 * i)) if i < 1 else norm.ppf(delta) for i in T])
+                d1 = np.array([norm.ppf(delta * np.exp(sofr(i) * i)) if i < 1 else norm.ppf(delta) for i in T])
             
             K = F * np.exp(-d1 * sigma * np.sqrt(T) + 0.5 * sigma**2 * T)
             return K

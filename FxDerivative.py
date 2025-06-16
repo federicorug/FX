@@ -38,8 +38,8 @@ class VanillaOption(Derivative):
     def Premium_EUR(self):
 
         sigma = self.vol_inter((self.T,self.strike))
-        rd = self.sofr_inter(self.T)/100                  
-        rf = self.estr_inter(self.T)/100  
+        rd = self.sofr_inter(self.T)                  
+        rf = self.estr_inter(self.T)  
 
         d1 = (math.log(self.ref / self.strike) + (rd - rf + 0.5 * sigma ** 2) * self.T) / (sigma * math.sqrt(self.T))
         d2 = d1 - sigma * math.sqrt(self.T)
