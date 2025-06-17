@@ -71,9 +71,7 @@ class rate:
         self.rate_curve = YieldTermStructureHandle(self.discount_curve)
 
 
-    def rate_interpolator(self, coin):
-
-        self.data_take(coin)
+    def rate_interpolator(self):
 
         pillar_dates = [self.calendar.advance(self.ql_today, Period(i, Months)) for i in range(1, 150, 3)]
         pillar_rates = [self.rate_curve.zeroRate(d, self.day_count, Continuous).rate() for d in pillar_dates]

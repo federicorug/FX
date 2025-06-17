@@ -1,13 +1,13 @@
-from FxDerivative import VanillaOption
+from FxDerivative import Vanilla
 import datetime as dt
 
 
-strike = 1.16
-date = dt.date(2026, 1, 2)
+strike = 1.18
+date = dt.date(2026, 5, 5)
 option_type = 'call'
 N = 100000
 
-option = VanillaOption()
+option = Vanilla()
 
 option.contract(option_type, strike, date, N)
 
