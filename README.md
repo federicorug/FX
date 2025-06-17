@@ -25,7 +25,7 @@ It is intentionally small: one deal type, one underlying, one model—so you can
 | Product coverage         | ⚠️     | European call/put only                                   |
 | Underlyings              | ⚠️     | `EURUSD` only                                            |
 | Pricing model            | ✅     | Garman-Kohlhagen with SABR vols                       |
-| CLI / notebook examples  | ✅     | `examples/price_vanilla.py`, `notebooks/Quickstart.ipynb`|
+
 
 ## 🛣️ Roadmap
 
