@@ -12,3 +12,4 @@ option = Vanilla()
 option.contract(option_type, strike, date, N)
 
 print('Ref:', option.ref, 'option price:', round(option.Premium_EUR(),2), 'EUR')
+
