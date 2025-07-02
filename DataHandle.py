@@ -36,7 +36,8 @@ class Fx_data:
         self.pts = pd.concat(self.pts, axis=0)
         self.fwd = self.spot + self.pts['mid'].values/10000
 
-        self.expiry_dates = [Date(i.day, i.month, i.year) for i in self.pts['maturity']]
+
+        self.expiry_dates = [self.fx_calendar.advance(Date(i.day, i.month, i.year), -2, Days) for i in self.pts['maturity']]
         interpolator  = Linear()           
         self.fx_fwd_curve = ForwardCurve(
             self.expiry_dates,
