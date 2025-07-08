@@ -1,16 +1,22 @@
 from abc import ABC, abstractmethod
-from DataHandle import Fx_data as fd
 from QuantLib import *
 import math
 from scipy.stats import norm
+from VolatilityHandle import VolSurface 
 
 class Derivative(ABC):
     def __init__(self):
-        self.mkt = None
+
+        self.data = None
 
     def download_data(self):
-        self.mkt = fd()
-        self.mkt.volbuilding()
+
+        self.mkt = VolSurface()
+        self.mkt.building()
+        self.ref = self.mkt.fx.spot
+        self.domestic_curve = self.mkt.estr.curve
+        self.foreign_curve = self.mkt.sofr.curve
+        self.vol_ts = self.mkt.surface
 
     @abstractmethod
     def contract(self):
@@ -40,13 +46,9 @@ class Vanilla(Derivative):
 
     def contract(self, option_type, strike, maturity_date, N):
 
-        self.ref = self.mkt.spot
-        self.domestic_curve = self.mkt.estr.rate_curve
-        self.foreign_curve = self.mkt.sofr.rate_curve
-        self.vol_ts = self.mkt.vol_handle
         self.maturity_date = maturity_date
         self.N = N
-        self.T  = (maturity_date - self.mkt.today).days / 360
+        self.T  = self.mkt.fx.day_count.yearFraction(self.mkt.fx.today, self.maturity_date)
         self.strike = strike
         self.option_type = option_type
 
@@ -56,7 +58,7 @@ class Vanilla(Derivative):
             self.option_type = Option.Put
 
         payoff = PlainVanillaPayoff(self.option_type, self.strike)
-        exercise = EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
+        exercise = EuropeanExercise(self.maturity_date)
 
         self.fx_option = VanillaOption(payoff, exercise)
         spot_handle = QuoteHandle(SimpleQuote(self.ref))
@@ -87,154 +89,131 @@ class Vanilla(Derivative):
 
         return self.fx_option.thetaPerDay()
     
-class BarOption(Derivative):
+# class BarOption(Derivative):
 
-    def contract(self, option_type, strike, BarrierType, barrier, maturity_date, N):
+#     def contract(self, option_type, strike, BarrierType, barrier, maturity_date, N):
 
-        self.ref = self.mkt.spot
-        self.domestic_curve = self.mkt.estr.rate_curve
-        self.foreign_curve = self.mkt.sofr.rate_curve
-        self.vol_ts = self.mkt.vol_handle
-        self.maturity_date = maturity_date
-        self.N = N
-        self.T  = (maturity_date - self.mkt.today).days / 360
-        self.strike = strike
-        self.option_type = option_type
-        self.BarrierType = BarrierType
-        self.Barrier = barrier  
+#         self.ref = self.mkt.spot
+#         self.domestic_curve = self.mkt.estr.rate_curve
+#         self.foreign_curve = self.mkt.sofr.rate_curve
+#         self.vol_ts = self.mkt.vol_handle
+#         self.maturity_date = maturity_date
+#         self.N = N
+#         self.T  = (maturity_date - self.mkt.today).days / 360
+#         self.strike = strike
+#         self.option_type = option_type
+#         self.BarrierType = BarrierType
+#         self.Barrier = barrier  
 
-        if self.option_type == 'call':
-            self.option_type = Option.Call
+#         if self.option_type == 'call':
+#             self.option_type = Option.Call
 
-            if self.BarrierType == 'knock-in':
-                self.BarrierType = Barrier.UpIn
-            elif self.BarrierType == 'knock-out':
-                self.BarrierType = Barrier.UpOut
+#             if self.BarrierType == 'knock-in':
+#                 self.BarrierType = Barrier.UpIn
+#             elif self.BarrierType == 'knock-out':
+#                 self.BarrierType = Barrier.UpOut
 
-        elif self.option_type == 'put':
-            self.option_type = Option.Put
+#         elif self.option_type == 'put':
+#             self.option_type = Option.Put
 
-            if self.BarrierType == 'knock-in':
-                self.BarrierType = Barrier.DownIn
-            elif self.BarrierType == 'knock-out':
-                self.BarrierType = Barrier.DownOut
+#             if self.BarrierType == 'knock-in':
+#                 self.BarrierType = Barrier.DownIn
+#             elif self.BarrierType == 'knock-out':
+#                 self.BarrierType = Barrier.DownOut
 
-        spot_handle = QuoteHandle(SimpleQuote(self.ref))
-        gk_process = GarmanKohlagenProcess(spot_handle, self.domestic_curve, self.foreign_curve, self.vol_ts)
+#         spot_handle = QuoteHandle(SimpleQuote(self.ref))
+#         gk_process = GarmanKohlagenProcess(spot_handle, self.domestic_curve, self.foreign_curve, self.vol_ts)
 
-        payoff = PlainVanillaPayoff(self.option_type, self.strike)
-        self.fx_option = BarrierOption(
-            self.BarrierType,   
-            self.Barrier,
-            0.0,
-            payoff,
-            EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
-        )
-
-        engine = AnalyticBarrierEngine(gk_process)
-        self.fx_option.setPricingEngine(engine)
+#         payoff = PlainVanillaPayoff(self.option_type, self.strike)
+#         self.fx_option = BarrierOption(
+#             self.BarrierType,   
+#             self.Barrier,
+#             0.0,
+#             payoff,
+#             EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
+#         )
+                   
+#         engine = AnalyticBarrierEngine(gk_process)
+#         self.fx_option.setPricingEngine(engine)
  
 
-    def Premium_EUR(self):
+#     def Premium_EUR(self):
 
-        npv = self.fx_option.NPV()
-        eurptg = npv/self.strike
+#         npv = self.fx_option.NPV()
+#         eurptg = npv/self.strike
 
-        return eurptg * self.N /self.ref
+#         return eurptg * self.N /self.ref
     
-    def delta_EUR(self):
+#     def delta_EUR(self):
         
-        return self.fx_option.delta() * self.N / self.strike
+#         return self.fx_option.delta() * self.N / self.strike
     
-    def gamma(self):
+#     def gamma(self):
 
-        return self.fx_option.gamma()
+#         return self.fx_option.gamma()
 
-    def vega(self):
+#     def vega(self):
 
-        return self.fx_option.vega()
+#         return self.fx_option.vega()
 
-    def theta_EUR(self):
+#     def theta_EUR(self):
 
-        return self.fx_option.thetaPerDay()
+#         return self.fx_option.thetaPerDay()
 
 
   
-class DigOption(Derivative):
+# class DigOption(Derivative):
 
-    def contract(self, option_type, strike, maturity_date, N):
+#     def contract(self, option_type, strike, maturity_date, N):
 
-        self.ref = self.mkt.spot
-        self.domestic_curve = self.mkt.estr.rate_curve
-        self.foreign_curve = self.mkt.sofr.rate_curve
-        self.vol_ts = self.mkt.vol_handle
-        self.maturity_date = maturity_date
-        self.N = N
-        self.T  = (maturity_date - self.mkt.today).days / 360
-        self.strike = strike
-        self.option_type = option_type
+#         self.ref = self.mkt.spot
+#         self.domestic_curve = self.mkt.estr.rate_curve
+#         self.foreign_curve = self.mkt.sofr.rate_curve
+#         self.vol_ts = self.mkt.vol_handle
+#         self.maturity_date = maturity_date
+#         self.N = N
+#         self.T  = (maturity_date - self.mkt.today).days / 360
+#         self.strike = strike
+#         self.option_type = option_type
 
+#         if self.option_type == 'call':
+#             self.option_type = Option.Call
 
-        if self.option_type == 'call':
-            self.option_type = Option.Call
+#         elif self.option_type == 'put':
+#             self.option_type = Option.Put
 
+#         payoff = CashOrNothingPayoff(self.option_type, self.strike, self.N)
+#         exercise = EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
 
-        elif self.option_type == 'put':
-            self.option_type = Option.Put
+#         self.fx_option = EuropeanOption(payoff, exercise)
 
+#         spot_handle = QuoteHandle(SimpleQuote(self.ref))
 
-        # spot_handle = QuoteHandle(SimpleQuote(self.ref))
-        # gk_process = GarmanKohlagenProcess(spot_handle, self.domestic_curve, self.foreign_curve, self.vol_ts)
+#         bsm_process = BlackScholesMertonProcess(spot_handle, self.domestic_curve, self.foreign_curve, self.vol_ts)
 
-        # payoff = PlainVanillaPayoff(self.option_type, self.strike)
-        # self.fx_option = BarrierOption(
-        #     self.BarrierType,   
-        #     self.Barrier,
-        #     0.0,
-        #     payoff,
-        #     EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
-        # )
-
-        # engine = AnalyticBarrierEngine(gk_process)
-        # self.fx_option.setPricingEngine(engine)
-
-        payoff = CashOrNothingPayoff(self.option_type, self.strike, self.N)
-        exercise = EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
-
-        self.fx_option = EuropeanOption(payoff, exercise)
-
-        spot_handle = QuoteHandle(SimpleQuote(self.ref))
-
-        bsm_process = GarmanKohlagenProcess(spot_handle, self.domestic_curve, self.foreign_curve, self.vol_ts)
-
-        engine = AnalyticEuropeanEngine(bsm_process)
-        self.fx_option.setPricingEngine(engine)
+#         engine = AnalyticEuropeanEngine(bsm_process)
+#         self.fx_option.setPricingEngine(engine)
  
 
-    def Premium_EUR(self):
+#     def Premium_EUR(self):
 
-        npv = self.fx_option.NPV()
+#         npv = self.fx_option.NPV()
 
-        return npv/self.ref
+#         return npv/self.ref
     
-    def delta_EUR(self):
+#     def delta_EUR(self):
         
-        return self.fx_option.delta() * self.N / self.strike
+#         return self.fx_option.delta() * self.N / self.strike
     
-    def gamma(self):
+#     def gamma(self):
 
-        return self.fx_option.gamma()
+#         return self.fx_option.gamma()
 
-    def vega(self):
+#     def vega(self):
 
-        return self.fx_option.vega()
+#         return self.fx_option.vega()
 
-    def theta_EUR(self):
+#     def theta_EUR(self):
 
-        return self.fx_option.thetaPerDay()
-
-
-
-
-
+#         return self.fx_option.thetaPerDay()
 

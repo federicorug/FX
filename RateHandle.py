@@ -1,52 +1,43 @@
 import pandas as pd
-import numpy as np
 from xbbg import blp, pipeline
-import datetime as dt
-import scipy.interpolate as interpolate
-import matplotlib.pyplot as plt
-import xlwings as xw
-import scipy.optimize as opt
 from QuantLib import *
-from scipy.optimize import minimize
-from scipy.stats import norm
 
 
 
-class rate:
+
+class RateCurve:
 
     def __init__(self):
 
         self.fields = ['Security_Name','mid','maturity']
-        self.tick = ['1Z','2Z','A','B','C', 'D', 'E','F','G','J','K','1','2','3','4','5','7','10','20']
-        self.today = dt.date.today()
-        self.ql_today = Date(self.today.day, self.today.month, self.today.year)
-        Settings.instance().evaluationDate = self.ql_today
+        self.maturity_ticker = ['1Z','2Z','A','B','C', 'D', 'E','F','G','J','K','1','2','3','4','5','7','10','20']
+        self.today = Date.todaysDate()
+        Settings.instance().evaluationDate = self.today
         self.day_count = Actual360()
 
     def data_take(self, coin):
 
         if coin == 'EUR':
-            ticker = 'EESWE'
+            underlying_ticker = 'EESWE'
             self.calendar = TARGET()
         elif coin == 'USD':
-            ticker = 'USOSFR'
+            underlying_ticker = 'USOSFR'
             self.calendar = UnitedStates(UnitedStates.NYSE)
 
-        rate_tick = ['{}{} Index'.format(ticker,i) for i in self.tick]
-        rate_curve = [blp.bdp(i, flds=['Security_Name', 'PX_LAST','maturity']) for i in rate_tick]
-        self.rate_curve = pd.concat(rate_curve, axis=0)
-
-        ql_date = [Date(i.day, i.month, i.year) for i in self.rate_curve['maturity']]
-        rates = self.rate_curve['px_last'].values/100
-        self.discount_curve = ZeroCurve(ql_date, rates, self.day_count, self.calendar)
-        self.rate_curve = YieldTermStructureHandle(self.discount_curve)
-        self.rate_curve.allowsExtrapolation
+        curve_ticker = ['{}{} Index'.format(underlying_ticker,i) for i in self.maturity_ticker]
+        curve_data = [blp.bdp(i, flds=['Security_Name', 'PX_LAST','maturity']) for i in curve_ticker]
+        self.curve_data = pd.concat(curve_data, axis=0)
+        pillars = [Date(i.day, i.month, i.year) for i in self.curve_data['maturity']]
+        rates = self.curve_data['px_last'].values/100
+        self.zero_curve = ZeroCurve(pillars, rates, self.day_count, self.calendar)
+        self.curve = YieldTermStructureHandle(self.zero_curve)
+        self.curve.allowsExtrapolation
 
 
     def rate_interpolator(self, target_date):
         try:
-            return self.rate_curve.zeroRate(target_date, Actual365Fixed(), Continuous, Annual).rate()
+            return self.curve.zeroRate(target_date, self.day_count, Continuous, Annual).rate()
         except:
-            return self.rate_curve.zeroRate(self.rate_curve.referenceDate(), Actual365Fixed(), Continuous, Annual).rate()
+            return self.curve.zeroRate(self.curve.referenceDate(), self.day_count, Continuous, Annual).rate()
 
 

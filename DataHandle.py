@@ -35,8 +35,6 @@ class Fx_data:
         self.pts = [blp.bdp(i, flds= self.fields + ['maturity']) for i in self.tickerfwd]
         self.pts = pd.concat(self.pts, axis=0)
         self.fwd = self.spot + self.pts['mid'].values/10000
-
-
         self.expiry_dates = [self.fx_calendar.advance(Date(i.day, i.month, i.year), -2, Days) for i in self.pts['maturity']]
         interpolator  = Linear()           
         self.fx_fwd_curve = ForwardCurve(
@@ -51,7 +49,7 @@ class Fx_data:
         self.fwd_data()
         target_date = Date(day.day, day.month, day.year)
 
-        return self.fx_fwd_curve.zeroRate(Date(18,8,2025), self.day_count, Continuous, Annual).rate()
+        return self.fx_fwd_curve.zeroRate(target_date, self.day_count, Continuous, Annual).rate()
 
     def vol_data(self):
 
