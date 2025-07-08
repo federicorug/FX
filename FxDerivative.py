@@ -7,16 +7,12 @@ from VolatilityHandle import VolSurface
 class Derivative(ABC):
     def __init__(self):
 
-        self.data = None
+        self.mkt = None
 
     def download_data(self):
 
         self.mkt = VolSurface()
         self.mkt.building()
-        self.ref = self.mkt.fx.spot
-        self.domestic_curve = self.mkt.estr.curve
-        self.foreign_curve = self.mkt.sofr.curve
-        self.vol_ts = self.mkt.surface
 
     @abstractmethod
     def contract(self):
@@ -46,6 +42,10 @@ class Vanilla(Derivative):
 
     def contract(self, option_type, strike, maturity_date, N):
 
+        self.ref = self.mkt.fx.spot
+        self.domestic_curve = self.mkt.estr.curve
+        self.foreign_curve = self.mkt.sofr.curve
+        self.vol_ts = self.mkt.surface
         self.maturity_date = maturity_date
         self.N = N
         self.T  = self.mkt.fx.day_count.yearFraction(self.mkt.fx.today, self.maturity_date)
@@ -93,7 +93,10 @@ class BarOption(Derivative):
 
     def contract(self, option_type, strike, BarrierType, barrier, maturity_date, N):
 
-
+        self.ref = self.mkt.fx.spot
+        self.domestic_curve = self.mkt.estr.curve
+        self.foreign_curve = self.mkt.sofr.curve
+        self.vol_ts = self.mkt.surface
         self.maturity_date = maturity_date
         self.N = N
         self.T  =  self.mkt.fx.day_count.yearFraction(self.mkt.fx.today, self.maturity_date)
@@ -127,7 +130,7 @@ class BarOption(Derivative):
             self.Barrier,
             0.0,
             payoff,
-            EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
+            EuropeanExercise(self.maturity_date)
         )
                    
         engine = AnalyticBarrierEngine(gk_process)
@@ -163,7 +166,10 @@ class DigOption(Derivative):
 
     def contract(self, option_type, strike, maturity_date, N):
 
-
+        self.ref = self.mkt.fx.spot
+        self.domestic_curve = self.mkt.estr.curve
+        self.foreign_curve = self.mkt.sofr.curve
+        self.vol_ts = self.mkt.surface
         self.maturity_date = maturity_date
         self.N = N
         self.T  =  self.mkt.fx.day_count.yearFraction(self.mkt.fx.today, self.maturity_date)
@@ -177,7 +183,7 @@ class DigOption(Derivative):
             self.option_type = Option.Put
 
         payoff = CashOrNothingPayoff(self.option_type, self.strike, self.N)
-        exercise = EuropeanExercise(Date(self.maturity_date.day, self.maturity_date.month, self.maturity_date.year))
+        exercise = EuropeanExercise(self.maturity_date)
 
         self.fx_option = EuropeanOption(payoff, exercise)
 
