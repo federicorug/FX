@@ -33,7 +33,6 @@ class FXCurve:
         self.curve = YieldTermStructureHandle(self.zerocurve)
         self.curve.allowsExtrapolation
 
-
     def fwd_interpolator(self, day):  
 
         return self.curve.zeroRate(day, self.day_count, Continuous, Annual).rate()

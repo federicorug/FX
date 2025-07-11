@@ -7,12 +7,10 @@ vanilla = Vanilla()
 vanilla.download_data()
 
 
+strike = 1.15
 
-
-strike = 1.2
-
-date = Date(7, 7, 2026)
-option_type = 'call'
+date = Date(12, 1, 2026)
+option_type = 'put'
 N = 100000
 
 vanilla.contract(option_type, strike, date, N)
