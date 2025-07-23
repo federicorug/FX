@@ -116,3 +116,14 @@ class VolSurface:
         self.volatility_matrix.index.name = 'maturity'
         self.volatility_matrix.columns.name = 'moneyness'
         self.surface = BlackVolTermStructureHandle(self.zerosurface)
+
+    def plot_surface(self):
+        plt.figure(figsize=(10, 6))
+        plt.contourf(self.volatility_matrix.columns, self.volatility_matrix.index, self.volatility_matrix.values, levels=50, cmap='viridis')
+        plt.colorbar(label='Volatility')
+        plt.xlabel('Moneyness')
+        plt.ylabel('Maturity')
+        plt.title('Volatility Surface')
+        plt.show()
+
+        
