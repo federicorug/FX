@@ -13,7 +13,6 @@ This repository is a **minimal, hack-friendly framework** that:
 2. **Builds elementary market objects** (spot, discount curves, vol surfaces);  
 3. **Prices plain-vanilla European options** on **EUR / USD** with Black-Scholes.
 
-It is intentionally small: one deal type, one underlying, one model—so you can read the entire codebase over a coffee.
 
 ---
 
@@ -22,7 +21,7 @@ It is intentionally small: one deal type, one underlying, one model—so you can
 | Category                 | Status | Notes                                                    |
 |--------------------------|:------:|----------------------------------------------------------|
 | Bloomberg connectivity   | ✅     | Uses official  → live spot, vols, discount curve |
-| Product coverage         | ⚠️     | European call/put only                                   |
+| Product coverage         | ⚠️     | European call/put, Digital options, Barrier options (knock-in / knock-out)                                    |
 | Underlyings              | ⚠️     | `EURUSD` only                                            |
 | Pricing model            | ✅     | Garman-Kohlhagen with SABR vols                       |
 
@@ -37,9 +36,7 @@ The framework is in active development. Below are the key next steps:
 
 - [ ] **Additional derivatives**  
   Add support for:
-  - Digital options
   - One-touch and no-touch options
-  - Barrier options (knock-in / knock-out)
   - Asian options (arithmetic/geo average)
   - NDFs
 
