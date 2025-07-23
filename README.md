@@ -59,18 +59,35 @@ The framework is in active development. Below are the key next steps:
 ## Quickstart
 
 ```bash
-from FxDerivative import VanillaOption
-import datetime as dt
+from FxDerivative import Vanilla, DigOption, BarOption
+from QuantLib import *
 
-strike = 1.16
-date = dt.date(2026, 1, 2)
+vanilla = Vanilla()
+vanilla.download_data()
+
+digital = DigOption()
+barrier = BarOption()
+digital.mkt = vanilla.mkt
+barrier.mkt = vanilla.mkt
+
+strike = 1.19
+date = Date(12, 1, 2026)
 option_type = 'call'
 N = 100000
 
-option = VanillaOption()
-option.contract(option_type, strike, date, N)
-premium = round(option.Premium_EUR(),2)
+vanilla.contract(option_type, strike, date, N)
 
-print('Ref:', option.ref, 'option price:',premium , 'EUR', 'implied vol:', option.sigma)
+ki = 1.21
+barrier_type = 'knock-in'
 
-Ref: 1.15555 option price: 2378.0 EUR implied vol: 0.07770351720145457
+barrier.contract(option_type, strike, barrier_type, ki,date, N)
+
+digital.contract(option_type, strike, date, N)
+
+print('Ref:', vanilla.ref, 'option price:', round(vanilla.Premium_EUR(),2), 'EUR')
+print('Ref:', barrier.ref, 'option price:', round(barrier.Premium_EUR(),2), 'EUR')
+print('Ref:', digital.ref, 'option price:', round(digital.Premium_EUR(),2), 'EUR')
+
+Ref: 1.1739 option price: 1665.54 EUR
+Ref: 1.1739 option price: 1657.2 EUR
+Ref: 1.1739 option price: 39213.32 EUR
